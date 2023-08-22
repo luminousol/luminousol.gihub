@@ -125,49 +125,77 @@ function preLoader() {
   preloader.style.display = "none";
 }
 
+/*==================== END EMAIL VIA emailJs ====================*/
+const sendEmail = (params) => {
+  const serviceID = "service_embce24";
+  const templateID = "template_cci0niw";
+
+  emailjs
+    .send(serviceID, templateID, params)
+    .then((res) => {
+      document.getElementById("name").value = "";
+      document.getElementById("email").value = "";
+      document.getElementById("message").value = "";
+
+      document.getElementById("email-submit").innerHTML = `
+          Send message
+          <i class="uil uil-message button__icon"></i>`;
+
+      alert("Your message send susscessfully!");
+      return;
+    })
+    .catch((err) => {
+      document.getElementById("email-submit").innerHTML = `
+          Send message
+          <i class="uil uil-message button__icon"></i>`;
+      console.error(err);
+    });
+};
+
+/*==================== EMAIL VALIDATION API ====================*/
+const validateEmail = (email, params) => {
+  const apiKey = "cf7383198f5a4c8a8b282a00c50dd08b";
+  const apiUrl = `https://emailvalidation.abstractapi.com/v1/?api_key=${apiKey}&email=${encodeURIComponent(
+    email
+  )}`;
+
+  fetch(apiUrl)
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.deliverability == "DELIVERABLE") sendEmail(params);
+      else {
+        alert("Invalid email address");
+        document.getElementById("email-submit").innerHTML = `
+        Send message
+        <i class="uil uil-message button__icon"></i>`;
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+      sendEmail(params);
+    });
+};
+
 /*==================== FORM SUBMIT ====================*/
 document.getElementById("contact-form").addEventListener("submit", (e) => {
   e.preventDefault();
 
-  //button animation
-  document.getElementById("email-submit").innerText = "Sending...";
+  const name = document.getElementById("name").value;
+  const email = document.getElementById("email").value;
+  const message = document.getElementById("message").value;
 
-  if (
-    document.getElementById("name").value != "" &&
-    document.getElementById("email").value != "" &&
-    document.getElementById("message").value != ""
-  ) {
-    let params = {
-      name: document.getElementById("name").value,
-      email: document.getElementById("email").value,
-      message: document.getElementById("message").value,
-    };
+  const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+  const isEmail = emailRegex.test(email);
 
-    const serviceID = "service_embce24";
-    const templateID = "template_cci0niw";
-
-    emailjs
-      .send(serviceID, templateID, params)
-      .then((res) => {
-        document.getElementById("name").value = "";
-        document.getElementById("email").value = "";
-        document.getElementById("message").value = "";
-
-        document.getElementById("email-submit").innerHTML = `
-          Send message
-          <i class="uil uil-message button__icon"></i>`;
-
-        alert("Your message send susscessfully!");
-      })
-      .catch((err) => {
-        document.getElementById("email-submit").innerHTML = `
-          Send message
-          <i class="uil uil-message button__icon"></i>`;
-        console.log(err);
-      });
-  } else {
-    alert("Please fill out all the fields");
+  //validate email
+  if (!isEmail) {
+    alert("Invalid email address");
+    return 0;
   }
+
+  const params = { name: name, email: email, message: message };
+  document.getElementById("email-submit").innerText = "Sending...";
+  validateEmail(email, params);
 });
 
 /*==================== GITHUB CALENDAR ====================*/
